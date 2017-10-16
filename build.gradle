@@ -14,10 +14,12 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.0.0-rc1'
+    classpath "com.android.tools.build:gradle:$android_plugin_version"
     classpath 'org.ajoberstar:grgit:2.0.1'
     //检查版本更新  ./gradlew dependencyUpdates -Drevision=release
     classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
   }
 }
 
@@ -40,14 +42,15 @@ allprojects {
 }
 
 subprojects {
-  def isAppModule = isModule.toBoolean()
-  def dataBindingModules = ["app"]//使用dataBinding的模块
+  def isAppModule = isModule.toBoolean() || it.name.equals("app")
+  def dataBindingModules = ["app"]
+  //使用dataBinding的模块
   def enableDataBinding = dataBindingModules.contains(it.name)
 
-  apply plugin: isAppModule ? 'com.android.application': 'com.android.library'
+  apply plugin: isAppModule ? 'com.android.application' : 'com.android.library'
 
   apply plugin: 'kotlin-android'
-  apply plugin: 'kotlin-android-extensions'
+  apply plugin: 'kotlin-android-extensions' // 拓展
 
   apply plugin: 'kotlin-kapt'
 
@@ -64,14 +67,14 @@ subprojects {
       versionName globalConfiguration.androidVersionName
       testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
       multiDexEnabled true
-      vectorDrawables.useSupportLibrary = true  //drawable支持
+      vectorDrawables.useSupportLibrary = true //drawable支持
 
       //arouter
-//      javaCompileOptions {
-//        annotationProcessorOptions {
-//          arguments = [ moduleName : project.getName() ]
-//        }
-//      }
+      //      javaCompileOptions {
+      //        annotationProcessorOptions {
+      //          arguments = [ moduleName : project.getName() ]
+      //        }
+      //      }
     }
     buildTypes {
       debug {
@@ -86,21 +89,21 @@ subprojects {
       }
     }
 
-//    flavorDimensions "mode"
-//    productFlavors {
-//      dev {
-//        applicationIdSuffix ".dev"
-//      }
-//      prod {
-//      }
-//    }
+    //    flavorDimensions "mode"
+    //    productFlavors {
+    //      dev {
+    //        applicationIdSuffix ".dev"
+    //      }
+    //      prod {
+    //      }
+    //    }
 
     compileOptions {
       sourceCompatibility JavaVersion.VERSION_1_8
       targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    if(enableDataBinding){
+    if (enableDataBinding) {
       dataBinding {
         enabled true
       }
