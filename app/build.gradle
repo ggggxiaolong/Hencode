@@ -1,0 +1,10 @@
+apply plugin: 'com.android.application'
+
+dependencies {
+  def appDependencies = rootProject.ext.appDependencies
+  implementation appDependencies.appcompat
+  implementation appDependencies.constraintLayout
+  testImplementation appDependencies.junit
+  androidTestImplementation appDependencies.runner
+  androidTestImplementation appDependencies.espresso
+}

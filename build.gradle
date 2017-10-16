@@ -1,0 +1,122 @@
+//项目地址  https://github.com/ggggxiaolong/Hencode
+apply from: 'dependencies/dependencies.gradle'
+apply plugin: 'com.github.ben-manes.versions'
+import org.ajoberstar.grgit.Grgit
+
+buildscript {
+  ext.kotlin_version = "1.1.51"
+  ext.android_plugin_version = "3.0.0-rc1"
+
+  repositories {
+    maven { url "https://dl.google.com/dl/android/maven2" }
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    jcenter()
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:3.0.0-rc1'
+    classpath 'org.ajoberstar:grgit:2.0.1'
+    //检查版本更新  ./gradlew dependencyUpdates -Drevision=release
+    classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
+  }
+}
+
+allprojects {
+  ext {
+    git = Grgit.open(currentDir: projectDir)
+    gitVersionName = git.describe()
+    gitVersionCode = git.tag.list().size()
+    gitVersionCodeTime = git.head().time
+    androidVersionCode = gitVersionCode
+    androidVersionName = gitVersionName
+  }
+
+  repositories {
+    maven { url "https://dl.google.com/dl/android/maven2" }
+    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+    jcenter()
+    mavenCentral()
+  }
+}
+
+subprojects {
+  def isAppModule = isModule.toBoolean()
+  def dataBindingModules = ["app"]//使用dataBinding的模块
+  def enableDataBinding = dataBindingModules.contains(it.name)
+
+  apply plugin: isAppModule ? 'com.android.application': 'com.android.library'
+
+  apply plugin: 'kotlin-android'
+  apply plugin: 'kotlin-android-extensions'
+
+  apply plugin: 'kotlin-kapt'
+
+  android {
+    def globalConfiguration = rootProject.ext
+    compileSdkVersion globalConfiguration.compileSdkVersion
+    buildToolsVersion globalConfiguration.buildToolsVersion
+    defaultConfig {
+      applicationId "com.mrtan.hencode"
+      minSdkVersion globalConfiguration.minSdkVersion
+      targetSdkVersion globalConfiguration.targetSdkVersion
+
+      versionCode globalConfiguration.androidVersionCode
+      versionName globalConfiguration.androidVersionName
+      testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+      multiDexEnabled true
+      vectorDrawables.useSupportLibrary = true  //drawable支持
+
+      //arouter
+//      javaCompileOptions {
+//        annotationProcessorOptions {
+//          arguments = [ moduleName : project.getName() ]
+//        }
+//      }
+    }
+    buildTypes {
+      debug {
+        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules-debug.pro'
+        minifyEnabled true
+        zipAlignEnabled true
+        jniDebuggable true
+      }
+      release {
+        minifyEnabled true
+        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+      }
+    }
+
+//    flavorDimensions "mode"
+//    productFlavors {
+//      dev {
+//        applicationIdSuffix ".dev"
+//      }
+//      prod {
+//      }
+//    }
+
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_1_8
+      targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    if(enableDataBinding){
+      dataBinding {
+        enabled true
+      }
+    }
+  }
+
+  dependencies {
+    def appDependencies = rootProject.ext.appDependencies
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+
+    implementation appDependencies.rxJava
+    implementation appDependencies.rxAndroid
+    debugImplementation appDependencies.leakCanary
+  }
+}
+
+task clean(type: Delete) {
+  delete rootProject.buildDir
+}
