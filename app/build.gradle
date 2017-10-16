@@ -3,6 +3,7 @@
 dependencies {
   def appDependencies = rootProject.ext.appDependencies
   implementation appDependencies.appcompat
+  implementation appDependencies.design
   implementation appDependencies.constraintLayout
   testImplementation appDependencies.junit
   androidTestImplementation appDependencies.runner
