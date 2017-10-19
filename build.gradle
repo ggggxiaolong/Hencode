@@ -1,44 +1,26 @@
 //项目地址  https://github.com/ggggxiaolong/Hencode
-apply from: 'dependencies/dependencies.gradle'
 apply plugin: 'com.github.ben-manes.versions'
 import org.ajoberstar.grgit.Grgit
 
 buildscript {
-  ext.kotlin_version = "1.1.51"
-  ext.android_plugin_version = "3.0.0-rc1"
+  apply from: "dependencies/versions.gradle"
 
-  repositories {
-    maven { url "https://dl.google.com/dl/android/maven2" }
-    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-    jcenter()
-    mavenCentral()
-  }
+  addRepos(repositories)
   dependencies {
-    classpath "com.android.tools.build:gradle:$android_plugin_version"
-    classpath 'org.ajoberstar:grgit:2.0.1'
+    classpath deps.android_gradle_plugin
+    classpath deps.grgit
     //检查版本更新  ./gradlew dependencyUpdates -Drevision=release
-    classpath 'com.github.ben-manes:gradle-versions-plugin:0.15.0'
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlin_version"
+    classpath deps.lib_versions
+    classpath deps.kotlin.plugin
+    classpath deps.kotlin.android_extensions
   }
 }
 
 allprojects {
-  ext {
-    git = Grgit.open(currentDir: projectDir)
-    gitVersionName = git.describe()
-    gitVersionCode = git.tag.list().size()
-    gitVersionCodeTime = git.head().time
-    androidVersionCode = gitVersionCode
-    androidVersionName = gitVersionName
-  }
+  def git = Grgit.open(currentDir: projectDir)
+  addGitVersion(git.describe(), git.tag.list().size())
 
-  repositories {
-    maven { url "https://dl.google.com/dl/android/maven2" }
-    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-    jcenter()
-    mavenCentral()
-  }
+  addRepos(repositories)
 }
 
 subprojects {
@@ -55,16 +37,15 @@ subprojects {
   apply plugin: 'kotlin-kapt'
 
   android {
-    def globalConfiguration = rootProject.ext
-    compileSdkVersion globalConfiguration.compileSdkVersion
-    buildToolsVersion globalConfiguration.buildToolsVersion
+    compileSdkVersion build_versions.compile_sdk
+    buildToolsVersion build_versions.build_tools
     defaultConfig {
       applicationId "com.mrtan.hencode"
-      minSdkVersion globalConfiguration.minSdkVersion
-      targetSdkVersion globalConfiguration.targetSdkVersion
+      minSdkVersion build_versions.min_sdk
+      targetSdkVersion build_versions.target_sdk
 
-      versionCode globalConfiguration.androidVersionCode
-      versionName globalConfiguration.androidVersionName
+      versionCode build_versions.androidVersionCode
+      versionName build_versions.androidVersionName
       testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
       multiDexEnabled true
       vectorDrawables.useSupportLibrary = true //drawable支持
@@ -111,12 +92,11 @@ subprojects {
   }
 
   dependencies {
-    def appDependencies = rootProject.ext.appDependencies
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation deps.kotlin.stdlib
 
-    implementation appDependencies.rxJava
-    implementation appDependencies.rxAndroid
-    debugImplementation appDependencies.leakCanary
+    implementation deps.rxjava2
+    implementation deps.rx_android
+    debugImplementation deps.leackCanary
   }
 }
 
